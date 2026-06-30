@@ -5,26 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generator PDF Fery</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background-color: #f4f6f9; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 30px; background-color: #f4f6f9; }
         .container { max-width: 500px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto; }
-        h2 { text-align: center; margin-bottom: 20px; color: #007bff; }
+        h2 { text-align: center; color: #007bff; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .row { display: flex; gap: 10px; }
         .row .form-group { flex: 1; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; }
         button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Edit PDF Massal</h2>
+    <h2>Edit PDF Cepat</h2>
     
     <div class="form-group">
-        <label>1. URL Link PDF Template (Online):</label>
-        <input type="text" id="pdfUrl" placeholder="https://domain.com/template.pdf">
+        <label>1. Pilih File PDF Template dari Laptop:</label>
+        <input type="file" id="pdfFileInput" accept=".pdf">
     </div>
 
     <div class="form-group">
@@ -48,39 +48,45 @@
         <input type="number" id="fontSize" value="20">
     </div>
 
-    <button onclick="kirimKeServer()">Generate & Download PDF</button>
+    <button onclick="kirimKeServer()">Generate & Download</button>
 </div>
 
 <script>
     async function kirimKeServer() {
-        const pdfUrl = document.getElementById('pdfUrl').value;
+        const fileInput = document.getElementById('pdfFileInput').files[0];
         const teksBaru = document.getElementById('teksBaru').value;
         const x = document.getElementById('koordinatX').value;
         const y = document.getElementById('koordinatY').value;
         const fontSize = document.getElementById('fontSize').value;
 
-        if(!pdfUrl || !teksBaru) {
-            alert('URL PDF dan Teks tidak boleh kosong ya');
+        if(!fileInput || !teksBaru) {
+            alert('File PDF dan Teks tidak boleh kosong ya');
             return;
         }
 
-        // PENTING: Ganti link di bawah ini dengan URL Vercel kamu yang sudah sukses tadi!
-        const urlServerVercel = 'https://pdf-server-2lla.vercel.app/';
+        // Pakai format FormData karena kita mengirimkan file fisik
+        const formData = new FormData();
+        formData.append('pdfFile', fileInput);
+        formData.append('teksBaru', teksBaru);
+        formData.append('x', x);
+        formData.append('y', y);
+        formData.append('fontSize', fontSize);
+
+        // PENTING: Ganti link di bawah ini dengan URL Vercel kamu!
+        const urlServerVercel = 'https://pdf-server-kamu.vercel.app/api/edit-pdf';
 
         try {
             const response = await fetch(urlServerVercel, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pdfUrl, teksBaru, x, y, fontSize })
+                body: formData // Kirim data beserta filenya
             });
 
             if (!response.ok) throw new Error('Gagal memproses ke server');
 
-            // Download file PDF yang dikirim balik oleh server
             const blob = await response.blob();
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = "hasil_edit_koordinat.pdf";
+            link.download = "hasil_edit_langsung.pdf";
             link.click();
 
         } catch (error) {
